@@ -13,13 +13,16 @@ const registration = async (req, res) => {
           "Username must be 3-16 characters long and can only contain letters, numbers, and underscores.",
       });
     }
+    // const existingUserName = await userSchema.findOne({ userName });
+    // if (existingUserName) return res.status(400).send("User Name already exists");
+
     if (!email) {
       return res.status(400).send("Email are required");
     }
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
-    const existingUser = await userSchema.findOne({ email });
+    const existingUser = await userSchema.findOne({ email, userName });
     if (existingUser) return res.status(400).send("Email already exists");
     if (!password) {
       return res.status(400).send("Password are required");
@@ -38,6 +41,9 @@ const registration = async (req, res) => {
     userData.save()
     res.status(201).json({ message: "User registation successful" });
   } catch (error) {
+    if (error.code===11000) {
+      return res.status(400).send("Duplicate User Name");
+    }
     res.status(500).send("Server error");
   }
 };
