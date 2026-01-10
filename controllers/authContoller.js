@@ -86,10 +86,13 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     const user = req.user;
-    
+    const userData = await userSchema.findById(user.id)
+    if(!userData) return res.status(404).send({message: "User Profile Not Found"})
+    res.status(200).send(userData)
   } catch (error) {
+    res.status(500).send({message: "internal Server Error"})
     console.log(error);
   }
 }
 
-module.exports = { registration, login };
+module.exports = { registration, login, getProfile };
