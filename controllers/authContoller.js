@@ -83,5 +83,13 @@ const login = async (req, res) => {
     console.log(error);
   }
 };
+const getProfile = async (req, res) => {
+  try {
+    const user = req.user;
+    
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 module.exports = { registration, login };
