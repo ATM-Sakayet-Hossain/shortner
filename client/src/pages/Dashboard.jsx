@@ -1,6 +1,138 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from 'lucide-react'
+import { shortUrlAPI } from '../utils/api'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router'
 
 const Dashboard = () => {
+  const [urlInput, setUrlInput] = useState('')
+  const [userUrls, setUserUrls] = useState([])
+  const [copiedId, setCopiedId] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(true)
+  const [error, setError] = useState('')
+  const { user, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !fetching) {
+      navigate('/login')
+    }
+  }, [isAuthenticated, fetching, navigate])
+
+  // Fetch user URLs on mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUrls()
+    }
+  }, [isAuthenticated])
+
+  const fetchUrls = async () => {
+    try {
+      setFetching(true)
+      const response = await shortUrlAPI.getAll()
+      if (response.data) {
+        // Transform backend data to match frontend format
+        const transformedUrls = response.data.map(url => ({
+          id: url._id,
+          shortCode: url.urlShort,
+          originalUrl: url.urlLong,
+          clicks: url.visitHistory?.length || 0,
+          createdAt: new Date(url.createdAt).toLocaleDateString(),
+        }))
+        setUserUrls(transformedUrls)
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch URLs')
+    } finally {
+      setFetching(false)
+    }
+  }
+
+  const handleCreateUrl = async () => {
+    if (!urlInput.trim()) {
+      setError('Please enter a URL')
+      return
+    }
+
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await shortUrlAPI.create(urlInput.trim())
+      if (response.data) {
+        // Add new URL to the list
+        const newUrl = {
+          id: Date.now().toString(), // Temporary ID until we refetch
+          shortCode: response.data.shortUrl,
+          originalUrl: response.data.longUrl,
+          clicks: 0,
+          createdAt: new Date().toLocaleDateString(),
+        }
+        setUserUrls([newUrl, ...userUrls])
+        setUrlInput('')
+        // Optionally refetch to get the real data from backend
+        // await fetchUrls()
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to create short URL. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCopy = async (shortCode, id) => {
+    const fullUrl = `http://localhost:1993/${shortCode}`
+    try {
+      await navigator.clipboard.writeText(fullUrl)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    // Confirm deletion
+    if (!window.confirm('Are you sure you want to delete this URL?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Delete from backend database
+      const response = await shortUrlAPI.delete(id);
+      
+      if (response && response.status === 200) {
+        // Remove from local state on success
+        setUserUrls(userUrls.filter(url => url.id !== id));
+        // Optionally refetch to ensure sync with backend
+        // await fetchUrls();
+      }
+    } catch (err) {
+      // Show error if delete fails
+      const errorMessage = err.message || 'Failed to delete URL. Please try again.';
+      setError(errorMessage);
+      console.error('Delete error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your URLs...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -50,6 +182,11 @@ const Dashboard = () => {
           {/* Create URL Section */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Shorten a URL</h3>
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="url"
@@ -58,12 +195,14 @@ const Dashboard = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleCreateUrl()}
                 placeholder="Enter your long URL here..."
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                disabled={loading}
               />
               <button
                 onClick={handleCreateUrl}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap"
+                disabled={loading}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Shorten
+                {loading ? 'Shortening...' : 'Shorten'}
               </button>
             </div>
           </div>
@@ -87,12 +226,12 @@ const Dashboard = () => {
                       <div className="flex-1 min-w-0 w-full">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <a
-                            href={`https://short.ly/${url.shortCode}`}
+                            href={`http://localhost:1993/${url.shortCode}`}
                             className="text-lg font-semibold text-blue-600 hover:text-blue-700"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            short.ly/{url.shortCode}
+                            localhost:1993/{url.shortCode}
                           </a>
                           <button
                             onClick={() => handleCopy(url.shortCode, url.id)}

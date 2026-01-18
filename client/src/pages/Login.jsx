@@ -1,10 +1,34 @@
 import React, { useState } from 'react';
 import { Link2 } from 'lucide-react';
+import { Link } from 'react-router';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const [currentPage, setCurrentPage] = useState('login');
-      const [user, setUser] = useState(null);
-      const [formData, setFormData] = useState({ email: '', password: '', name: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await login(formData.email, formData.password);
+      if (result && !result.success) {
+        setError(result.error || 'Login failed. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -18,6 +42,12 @@ const Login = () => {
             <p className="text-gray-600 mt-2">Login to access your dashboard</p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
@@ -28,6 +58,7 @@ const Login = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 placeholder="your@email.com"
+                disabled={loading}
               />
             </div>
 
@@ -40,32 +71,35 @@ const Login = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 placeholder="••••••••"
+                disabled={loading}
               />
             </div>
 
             <button
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg"
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Don't have an account?{' '}
-              <button
-                onClick={() => setCurrentPage('register')}
+              <Link
+                to="/registration"
                 className="text-blue-600 hover:text-blue-700 font-semibold"
               >
                 Register
-              </button>
+              </Link>
             </p>
-            <button
-              onClick={() => setCurrentPage('home')}
-              className="text-gray-600 hover:text-gray-700 mt-2 text-sm"
+            <Link
+              to="/"
+              className="text-gray-600 hover:text-gray-700 mt-2 text-sm block"
             >
               Continue as guest
-            </button>
+            </Link>
           </div>
         </div>
       </div>

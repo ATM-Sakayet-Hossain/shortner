@@ -57,4 +57,36 @@ const getShortUrls = async (req, res) => {
   }
 }
 
-module.exports = { createShortUrl, redirecUrl, getShortUrls };
+const deleteShortUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+    
+    console.log('Delete request received:', { id, userId: user?.id });
+    
+    if (!id) {
+      return res.status(400).send({ message: "URL ID is required" });
+    }
+    
+    if (!user || !user.id) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    
+    // Find the URL and verify it belongs to the user
+    const urlData = await shortUrlSchema.findOne({ _id: id, user: user.id });
+    
+    if (!urlData) {
+      return res.status(404).send({ message: "URL not found or unauthorized" });
+    }
+    
+    // Delete the URL from database
+    await shortUrlSchema.findByIdAndDelete(id);
+    
+    res.status(200).send({ message: "URL deleted successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Server Error" });
+    console.log('Delete error:', error);
+  }
+}
+
+module.exports = { createShortUrl, redirecUrl, getShortUrls, deleteShortUrl };

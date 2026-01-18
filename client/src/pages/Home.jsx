@@ -1,7 +1,92 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from 'lucide-react';
+import { shortUrlAPI } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
 
 const Home = () => {
+  const [urlInput, setUrlInput] = useState('');
+  const [guestUrls, setGuestUrls] = useState([]);
+  const [copiedId, setCopiedId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Load guest URLs from localStorage on mount
+  React.useEffect(() => {
+    const savedUrls = localStorage.getItem('guestUrls');
+    if (savedUrls) {
+      try {
+        setGuestUrls(JSON.parse(savedUrls));
+      } catch (e) {
+        console.error('Error loading guest URLs:', e);
+      }
+    }
+  }, []);
+
+  // Save guest URLs to localStorage whenever they change
+  React.useEffect(() => {
+    if (guestUrls.length > 0) {
+      localStorage.setItem('guestUrls', JSON.stringify(guestUrls));
+    } else {
+      localStorage.removeItem('guestUrls');
+    }
+  }, [guestUrls]);
+
+  const handleCreateUrl = async () => {
+    if (!urlInput.trim()) {
+      setError('Please enter a URL');
+      return;
+    }
+
+    // If user is authenticated, redirect to dashboard
+    if (user) {
+      navigate('/dashboard');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await shortUrlAPI.create(urlInput.trim());
+      if (response.data) {
+        const newUrl = {
+          id: Date.now().toString(),
+          shortCode: response.data.shortUrl,
+          originalUrl: response.data.longUrl,
+          clicks: 0,
+          createdAt: new Date().toLocaleDateString(),
+        };
+        setGuestUrls([newUrl, ...guestUrls]);
+        setUrlInput('');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to create short URL. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async (shortCode, id) => {
+    const fullUrl = `http://localhost:1993/${shortCode}`;
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleDelete = (id) => {
+    // Confirm deletion
+    if (window.confirm('Are you sure you want to delete this URL?')) {
+      setGuestUrls(guestUrls.filter(url => url.id !== id));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -24,17 +109,27 @@ const Home = () => {
           {/* URL Shortener */}
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8 max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold text-gray-800 mb-6">Create Short URL</h3>
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleCreateUrl()}
                 placeholder="Paste your long URL here..."
                 className="flex-1 px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-lg"
+                disabled={loading}
               />
               <button
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap"
+                onClick={handleCreateUrl}
+                disabled={loading}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Shorten URL
+                {loading ? 'Shortening...' : 'Shorten URL'}
               </button>
             </div>
           </div>
@@ -56,12 +151,12 @@ const Home = () => {
                       <div className="flex-1 min-w-0 w-full">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <a
-                            href={`https://short.ly/${url.shortCode}`}
+                            href={`http://localhost:1993/${url.shortCode}`}
                             className="text-lg font-semibold text-blue-600 hover:text-blue-700"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            short.ly/{url.shortCode}
+                            localhost:1993/{url.shortCode}
                           </a>
                           <button
                             onClick={() => handleCopy(url.shortCode, url.id)}
