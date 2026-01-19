@@ -1,5 +1,5 @@
 
-const API_BASE_URL = import.meta.env.DEV ? '/api' : 'http://localhost:1993';
+const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://shortner-azure.vercel.app/';
 
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;

@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:1993',
+        target: 'https://shortner-azure.vercel.app/',
         changeOrigin: true,
         rewrite: (path) => {
           // Remove /api prefix and forward the rest
