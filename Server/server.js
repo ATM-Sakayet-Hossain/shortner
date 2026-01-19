@@ -10,7 +10,7 @@ app.use(cookieParser())
 dbConfig();
 
 app.use(route)
-
+//
 app.listen(1993, () => {
   console.log(`Example app listening on port 1993`)
 })
