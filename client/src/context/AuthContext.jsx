@@ -1,115 +1,125 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { authAPI } from '../utils/api';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  useGetProfileQuery,
+  useLoginMutation,
+  useRegisterMutation,
+} from "../services/api";
 
 const AuthContext = createContext(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if user is authenticated on mount
+  const hasToken = Boolean(localStorage.getItem("accessToken"));
+
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+  } = useGetProfileQuery(undefined, {
+    skip: !hasToken,
+  });
+
+  const [loginMutation] = useLoginMutation();
+  const [registerMutation] = useRegisterMutation();
+
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      setLoading(true);
-      const response = await authAPI.getProfile();
-      if (response.data) {
-        setUser({
-          id: response.data._id,
-          userName: response.data.userName,
-          email: response.data.email,
-        });
-      }
-    } catch {
-      // User is not authenticated
+    if (profile && !isProfileError) {
+      const profileUser = profile.user || profile.data || profile;
+      setUser(profileUser || null);
+      setIsAuthenticated(!!profileUser);
+    } else if (isProfileError) {
+      localStorage.removeItem("accessToken");
       setUser(null);
-    } finally {
-      setLoading(false);
+      setIsAuthenticated(false);
     }
-  };
+  }, [profile, isProfileError]);
 
   const login = async (email, password) => {
     try {
-      setError(null);
-      setLoading(true);
-      const response = await authAPI.login({ email, password });
-      
-      if (response && response.status === 200) {
-        // Fetch user profile after successful login
-        await checkAuth();
-        navigate('/dashboard');
-        return { success: true };
+      const data = await loginMutation({ email, password }).unwrap();
+      const token =
+        data?.accessToken ||
+        data?.token ||
+        data?.jwt ||
+        data?.access_token ||
+        data?.data?.accessToken;
+
+      if (token) {
+        localStorage.setItem("accessToken", token);
       }
-      // If status is not 200, return error
-      return { success: false, error: 'Login failed. Please try again.' };
+
+      const loggedInUser = data?.user || data?.data || data;
+      setUser(loggedInUser || null);
+      setIsAuthenticated(!!loggedInUser);
+
+      return { success: true };
     } catch (err) {
-      const errorMessage = err.message || 'Login failed. Please try again.';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+      const message =
+        err?.data?.message ||
+        err?.error ||
+        err?.message ||
+        "Login failed. Please try again.";
+      return { success: false, error: message };
     }
   };
 
   const register = async (userName, email, password) => {
     try {
-      setError(null);
-      setLoading(true);
-      const response = await authAPI.register({ userName, email, password });
-      
-      if (response && response.status === 201) {
-        // After registration, login the user
-        const loginResponse = await login(email, password);
-        // Ensure loginResponse is always defined
-        return loginResponse || { success: false, error: 'Registration successful but login failed.' };
+      const data = await registerMutation({
+        userName,
+        email,
+        password,
+      }).unwrap();
+      const token =
+        data?.accessToken ||
+        data?.token ||
+        data?.jwt ||
+        data?.access_token ||
+        data?.data?.accessToken;
+
+      if (token) {
+        localStorage.setItem("accessToken", token);
       }
-      // If status is not 201, extract error from response data
-      const errorMessage = response?.data?.message || 'Registration failed. Please try again.';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+
+      const registeredUser = data?.user || data?.data || data;
+      setUser(registeredUser || null);
+      setIsAuthenticated(!!registeredUser);
+
+      return { success: true };
     } catch (err) {
-      // Extract error message from the error object
-      const errorMessage = err.message || 'Registration failed. Please try again.';
-      console.error('Registration error:', err);
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+      const message =
+        err?.data?.message ||
+        err?.error ||
+        err?.message ||
+        "Registration failed. Please try again.";
+      return { success: false, error: message };
     }
   };
 
   const logout = () => {
+    localStorage.removeItem("accessToken");
     setUser(null);
-    // Clear cookies by making a request (or just clear state)
-    // Since backend uses cookies, we can't directly delete them from frontend
-    // But we can clear the user state
-    navigate('/');
+    setIsAuthenticated(false);
   };
 
   const value = {
     user,
-    loading,
-    error,
+    isAuthenticated,
     login,
     register,
     logout,
-    checkAuth,
-    isAuthenticated: !!user,
+    loading: isProfileLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };
