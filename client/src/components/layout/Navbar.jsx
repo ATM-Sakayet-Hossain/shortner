@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Link2, LogOut, Menu, X } from 'lucide-react';
-import { Link } from 'react-router';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from "react";
+import { Link2, LogOut, Menu, X } from "lucide-react";
+import { Link } from "react-router";
+import { useAuth } from "../../context/AuthContext";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -13,7 +13,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+    <nav className="bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link
@@ -23,7 +23,7 @@ const Navbar = () => {
             <Link2 className="w-8 h-8" />
             <span className="text-2xl font-bold">ShortURL</span>
           </Link>
-          
+
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated && user ? (
               <>
@@ -64,7 +64,11 @@ const Navbar = () => {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
 
@@ -79,7 +83,9 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <div className="px-4 py-2 text-sm">Welcome, {user.userName}</div>
+                <div className="px-4 py-2 text-sm">
+                  Welcome, {user.userName}
+                </div>
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 hover:bg-white/20 rounded-lg transition"
@@ -109,7 +115,7 @@ const Navbar = () => {
         )}
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

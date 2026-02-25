@@ -11,6 +11,7 @@ export default defineConfig({
         target: "https://shortner-azure.vercel.app",
         changeOrigin: true,
         secure: true,
+        rewrite: (path) => path.replace(/^\/api/, ""), // Remove /api prefix - backend routes are at /auth/login
       },
     },
   },

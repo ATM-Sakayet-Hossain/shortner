@@ -80,7 +80,7 @@ const Home = () => {
   };
 
   const handleCopy = async (shortCode, id) => {
-    const fullUrl = `http://localhost:1993/${shortCode}`;
+    const fullUrl = `https://shortner-azure.vercel.app/${shortCode}`;
     try {
       await navigator.clipboard.writeText(fullUrl);
       setCopiedId(id);
@@ -104,7 +104,7 @@ const Home = () => {
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Shorten Your URLs
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
               {" "}
               Instantly
             </span>
@@ -143,7 +143,7 @@ const Home = () => {
             <button
               onClick={handleCreateUrl}
               disabled={isCreating}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-linear-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreating ? "Shortening..." : "Shorten URL"}
             </button>
@@ -170,7 +170,7 @@ const Home = () => {
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <a
-                          href={`http://localhost:1993/${url.shortCode}`}
+                          href={`https://shortner-azure.vercel.app/${url.shortCode}`}
                           className="text-lg font-semibold text-blue-600 hover:text-blue-700"
                           target="_blank"
                           rel="noopener noreferrer"

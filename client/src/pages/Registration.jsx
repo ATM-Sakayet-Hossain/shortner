@@ -1,67 +1,100 @@
-import React, { useState } from 'react';
-import { Link2 } from 'lucide-react';
-import { Link } from 'react-router';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { Link2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "../context/AuthContext";
 
 const Registration = () => {
-  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', userName: '' });
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    userName: "",
+  });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   // Clear error when user starts typing
   const handleInputChange = (field, value) => {
-    setFormData({...formData, [field]: value});
+    setFormData({ ...formData, [field]: value });
     if (error) {
-      setError('');
+      setError("");
     }
   };
 
   const handleRegister = async () => {
-    setError('');
+    setError("");
 
-    if (!formData.userName || formData.userName.trim() === '') {
-      setError('Username is required');
+    if (!formData.userName || formData.userName.trim() === "") {
+      setError("Username is required");
       return;
     }
-    if (!formData.email || formData.email.trim() === '') {
-      setError('Email is required');
+    if (!formData.email || formData.email.trim() === "") {
+      setError("Email is required");
       return;
     }
-    if (!formData.password || formData.password.trim() === '') {
-      setError('Password is required');
+    if (!formData.password || formData.password.trim() === "") {
+      setError("Password is required");
       return;
     }
-    if (!formData.confirmPassword || formData.confirmPassword.trim() === '') {
-      setError('Confirm Password is required');
+    if (!formData.confirmPassword || formData.confirmPassword.trim() === "") {
+      setError("Confirm Password is required");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     setLoading(true);
 
     try {
-      const result = await register(formData.userName, formData.email, formData.password);
-      if (result && !result.success) {
-        setError(result.error || 'Registration failed. Please try again.');
+      const result = await register({
+        userName: formData.userName,
+        email: formData.email,
+        password: formData.password,
+      });
+      
+      console.log("Registration result:", result);
+      
+      if (result && result.success) {
+        if (result.needsLogin) {
+          // No token returned - user needs to login
+          setError("Registration successful! Please login to continue.");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        } else {
+          // Token received - navigate to dashboard
+          console.log("Registration successful! Redirecting to dashboard...");
+          navigate("/dashboard");
+        }
+      } else if (result && !result.success) {
+        setError(result.error || "Registration failed. Please try again.");
       }
     } catch (err) {
-      setError(err.message || 'An unexpected error occurred');
+      console.error("Registration exception:", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 to-blue-50">
       <div className="flex items-center justify-center px-4 py-12">
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-purple-600 to-blue-600 rounded-full mb-4">
               <Link2 className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
@@ -76,12 +109,14 @@ const Registration = () => {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
               <input
                 type="text"
                 value={formData.userName}
-                onChange={(e) => handleInputChange('userName', e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleRegister()}
+                onChange={(e) => handleInputChange("userName", e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="johndoe"
                 disabled={loading}
@@ -89,12 +124,14 @@ const Registration = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleRegister()}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="your@email.com"
                 disabled={loading}
@@ -102,28 +139,35 @@ const Registration = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleRegister()}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 disabled={loading}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 6 characters with uppercase, lowercase, number, and special character
+                Password must be at least 6 characters with uppercase,
+                lowercase, number, and special character
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleRegister()}
+                onChange={(e) =>
+                  handleInputChange("confirmPassword", e.target.value)
+                }
+                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 disabled={loading}
@@ -133,15 +177,15 @@ const Registration = () => {
             <button
               onClick={handleRegister}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-linear-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 to="/login"
                 className="text-purple-600 hover:text-purple-700 font-semibold"
@@ -159,7 +203,7 @@ const Registration = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Registration
+export default Registration;

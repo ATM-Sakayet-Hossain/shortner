@@ -1,36 +1,60 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-// Environment-based API base URL
-// In dev we call the Vite dev server at /api (which is proxied to the
-// deployed API) to avoid browser CORS issues. In production, we call
-// the deployed API directly.
+// Use /api base URL in dev (proxied by Vite to backend)
+// In production, use the full deployed URL
 const API_BASE_URL = import.meta.env.DEV
   ? "/api"
   : import.meta.env.VITE_API_URL || "https://shortner-azure.vercel.app/api";
 
+// Custom baseQuery to handle text error responses
+const baseQuery = fetchBaseQuery({
+  baseUrl: API_BASE_URL,
+  credentials: "include",
+  prepareHeaders: (headers, { getState }) => {
+    const token =
+      getState()?.auth?.token || localStorage.getItem("accessToken");
+    if (token) {
+      headers.set("authorization", `Bearer ${token}`);
+    }
+
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
+    return headers;
+  },
+});
+
+// Wrapper to handle text error responses
+const baseQueryWithErrorHandling = async (args, api, extraOptions) => {
+  const result = await baseQuery(args, api, extraOptions);
+  
+  // Handle PARSING_ERROR (when backend returns text instead of JSON)
+  if (result.error && result.error.status === 'PARSING_ERROR') {
+    // Extract the text error message from the error
+    const textError = result.error.data || result.error.originalStatus;
+    return {
+      ...result,
+      error: {
+        status: result.error.originalStatus || 400,
+        data: textError, // Preserve the text error message
+      },
+    };
+  }
+  
+  // If there's an error and the data is a string (text response), preserve it
+  if (result.error && typeof result.error.data === 'string') {
+    return result;
+  }
+  
+  return result;
+};
+
 export const api = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    credentials: "include", // keep cookies support for existing backend
-    prepareHeaders: (headers, { getState }) => {
-      // Prefer Redux auth slice token, fallback to localStorage
-      const token =
-        getState()?.auth?.token || localStorage.getItem("accessToken");
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-
-      if (!headers.has("Content-Type")) {
-        headers.set("Content-Type", "application/json");
-      }
-
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithErrorHandling,
   tagTypes: ["User", "ShortUrl"],
   endpoints: (builder) => ({
-    // AUTH ENDPOINTS
     getProfile: builder.query({
       query: () => "/auth/getProfile",
       providesTags: ["User"],
@@ -41,7 +65,6 @@ export const api = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["User"],
     }),
     register: builder.mutation({
       query: (body) => ({

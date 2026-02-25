@@ -1,12 +1,12 @@
 import React from "react";
-import Login from "./pages/Login";
 import Error from "./pages/Error";
-import Registration from "./pages/Registration";
+import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Route, Routes } from "react-router";
+import Registration from "./pages/Registration";
+import Login from "./pages/Login";
 import Layout from "./components/layout";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
-import { AuthProvider } from "./context/AuthContext";
 const App = () => {
   return (
     <>
