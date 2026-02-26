@@ -18,8 +18,8 @@ const registration = async (req, res) => {
           "Username must be 3-16 characters long and can only contain letters, numbers, and underscores.",
       });
     }
-    // const existingUserName = await userSchema.findOne({ userName });
-    // if (existingUserName) return res.status(400).send("User Name already exists");
+    const existingUserName = await userSchema.findOne({ userName });
+    if (existingUserName) return res.status(400).send("User Name already exists");
 
     if (!email) {
       return res.status(400).send("Email are required");
@@ -80,7 +80,6 @@ const login = async (req, res) => {
     res.status(200).json({ message: "User login successful" });
   } catch (error) {
     res.status(500).send("Server error");
-    console.log(error);
   }
 };
 const getProfile = async (req, res) => {
@@ -91,7 +90,6 @@ const getProfile = async (req, res) => {
     res.status(200).send(userData)
   } catch (error) {
     res.status(500).send({message: "internal Server Error"})
-    console.log(error);
   }
 }
 
