@@ -47,6 +47,7 @@ const authServices = {
   getProfile: async () => {
     try {
       const res = await api.get("/auth/getProfile");
+      console.log(res);
       return res.data;
     } catch (err) {
       throw err.response?.data || err;

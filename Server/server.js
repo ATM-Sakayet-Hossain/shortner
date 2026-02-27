@@ -11,7 +11,6 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS configuration to allow frontend to talk to this server
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
