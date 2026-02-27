@@ -26,7 +26,8 @@ const Dashboard = () => {
         const urls = await urlServices.getAll();
         setData(Array.isArray(urls) ? urls : urls?.data || []);
       } catch (err) {
-        if (err?.response?.status === 401 || err?.response?.status === 403) {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
           navigate("/");
           return;
         }
@@ -183,8 +184,9 @@ const Dashboard = () => {
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">
                 {formError ||
-                  error?.data?.message ||
-                  error?.error ||
+                  error?.response?.data?.message ||
+                  error?.response?.data ||
+                  error?.message ||
                   "Something went wrong"}
               </p>
             </div>

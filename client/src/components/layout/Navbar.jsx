@@ -15,7 +15,11 @@ const Navbar = () => {
         const profile = await authServices.getProfile();
         setUser(profile);
         setIsAuthenticated(true);
-      } catch {
+      } catch (err) {
+        // If unauthorized, keep user logged-out state; for other errors, just log
+        if (err?.response?.status && err.response.status !== 401) {
+          console.error("Navbar getProfile error:", err);
+        }
         setUser(null);
         setIsAuthenticated(false);
       }
