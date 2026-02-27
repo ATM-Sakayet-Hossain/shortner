@@ -10,7 +10,7 @@ const registration = async (req, res) => {
   const { userName, email, password } = req.body;
   try {
     if (!userName) {
-      return res.status(400).send("Name are required");
+      return res.status(400).send({message: "Name are required"});
     }
     if (!isValidUsername(userName)) {
       return res.status(400).json({
@@ -19,18 +19,18 @@ const registration = async (req, res) => {
       });
     }
     const existingUserName = await userSchema.findOne({ userName });
-    if (existingUserName) return res.status(400).send("User Name already exists");
+    if (existingUserName) return res.status(400).send({message: "User Name already exists"});
 
     if (!email) {
-      return res.status(400).send("Email are required");
+      return res.status(400).send({message: "Email are required"});
     }
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
     const existingUser = await userSchema.findOne({ email, userName });
-    if (existingUser) return res.status(400).send("Email already exists");
+    if (existingUser) return res.status(400).send({message: "Email already exists"});
     if (!password) {
-      return res.status(400).send("Password are required");
+      return res.status(400).send({message: "Password are required"});
     }
     if (!isStrongPassword(password)) {
       return res.status(400).json({
@@ -47,9 +47,9 @@ const registration = async (req, res) => {
     res.status(201).json({ message: "User registation successful" });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).send("Duplicate User Name");
+      return res.status(400).send({message: "Duplicate User Name"});
     }
-    res.status(500).send("Server error");
+    res.status(500).send({message: "Server error"});
   }
 };
 
@@ -57,13 +57,13 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     if (!email) {
-      return res.status(400).send("Email are required");
+      return res.status(400).send({message: "Email are required"});
     }
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
     if (!password) {
-      return res.status(400).send("Password are required");
+      return res.status(400).send({message: "Password are required"});
     }
     if (!isStrongPassword(password)) {
       return res.status(400).json({
@@ -72,14 +72,14 @@ const login = async (req, res) => {
       });
     }
     const userData = await userSchema.findOne({ email });
-    if (!userData) return res.status(400).send("User does not exist");
+    if (!userData) return res.status(400).send({message: "User does not exist"});
     const match = await userData.comparePassword(password);
-    if (!match) return res.status(401).send("Unauthorized user");
+    if (!match) return res.status(401).send({message: "Unauthorized user"});
     const token = generateAccTkn({ id: userData._id, email: userData.email });
     res.cookie("acc_token", token);
     res.status(200).json({ message: "User login successful" });
   } catch (error) {
-    res.status(500).send("Server error");
+    res.status(500).send({message: "Server error"});
   }
 };
 const getProfile = async (req, res) => {
