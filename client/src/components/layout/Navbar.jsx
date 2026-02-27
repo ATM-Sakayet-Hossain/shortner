@@ -8,6 +8,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+  console.log(user);
 
   useEffect(() => {
     const fetchProfile = async () => {
