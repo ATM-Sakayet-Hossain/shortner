@@ -8,12 +8,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/auth": {
-        target: "https://shortner-azure.vercel.app",
+        target: "https://shortner-server.vercel.app/",
         changeOrigin: true,
         secure: false,
       },
       "/shorturl": {
-        target: "https://shortner-azure.vercel.app",
+        target: "https://shortner-server.vercel.app/",
         changeOrigin: true,
         secure: false,
       },
