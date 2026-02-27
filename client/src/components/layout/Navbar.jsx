@@ -56,7 +56,7 @@ const Navbar = () => {
             {isAuthenticated && user ? (
               <>
                 <Link
-                  to="/Dashboard"
+                  to="/dashboard"
                   className="px-4 py-2 hover:bg-white/20 rounded-lg transition"
                 >
                   Dashboard
@@ -105,7 +105,7 @@ const Navbar = () => {
             {isAuthenticated && user ? (
               <div className="space-y-2">
                 <Link
-                  to="/Dashboard"
+                  to="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-4 py-2 hover:bg-white/20 rounded-lg transition"
                 >
