@@ -44,7 +44,7 @@ const redirecUrl = async (req, res) => {
     }
     res.redirect(urlData.urlLong);
   } catch (error) {
-    res.redirect(process.env.CLIENT_URL + urlData.urlShort);
+    res.status(500).send({ message: "Server Error" });
   }
 };
 const getShortUrls = async (req, res) => {
