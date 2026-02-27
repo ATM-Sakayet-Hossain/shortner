@@ -1,7 +1,5 @@
 {
   "buildCommand": "npm install",
-  "outputDirectory": "client/dist",
-  "installCommand": "cd client && npm install",
   "rewrites": [
     {
       "source": "/(.*)",
