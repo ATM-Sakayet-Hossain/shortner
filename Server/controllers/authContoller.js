@@ -90,6 +90,7 @@ const getProfile = async (req, res) => {
     res.status(200).send(userData)
   } catch (error) {
     res.status(500).send({message: "internal Server Error"})
+    console.log(error);
   }
 }
 
