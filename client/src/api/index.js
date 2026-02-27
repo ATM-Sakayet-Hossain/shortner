@@ -1,13 +1,9 @@
 import axios from "axios";
 import { getCookie } from "../components/utils/services";
 
-// Use relative base URL in dev so Vite proxy handles CORS
-const baseURL = import.meta.env.DEV
-  ? ""
-  : import.meta.env.VITE_API_BASE_URL || "";
 
 const api = axios.create({
-  baseURL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:1993/",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -19,7 +15,7 @@ api.interceptors.request.use(
   (config) => {
     const acc_token = getCookie("acc_token");
     if (acc_token) {
-      config.headers.Authorization = `Bearer ${acc_token}`;
+      config.headers.Authorization = `${acc_token}`;
     }
     return config;
   },

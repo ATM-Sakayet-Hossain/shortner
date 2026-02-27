@@ -3,9 +3,9 @@ import Error from "./pages/Error";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
-import Layout from "./components/layout";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
+import Layout from "./components/layout";
 const App = () => {
   return (
     <>
