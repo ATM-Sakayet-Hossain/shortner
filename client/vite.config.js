@@ -7,11 +7,15 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      "/api": {
+      "/auth": {
         target: "https://shortner-azure.vercel.app",
         changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/api/, ""), // Remove /api prefix - backend routes are at /auth/login
+        secure: false,
+      },
+      "/shorturl": {
+        target: "https://shortner-azure.vercel.app",
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

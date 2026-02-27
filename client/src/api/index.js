@@ -1,52 +1,84 @@
 import axios from "axios";
 import { getCookie } from "../components/utils/services";
 
+// Use relative base URL in dev so Vite proxy handles CORS
+const baseURL = import.meta.env.DEV
+  ? ""
+  : import.meta.env.VITE_API_BASE_URL || "";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:1993/",
+  baseURL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// Token interceptor
 api.interceptors.request.use(
   (config) => {
     const acc_token = getCookie("acc_token");
     if (acc_token) {
-      config.headers.Authorization = `${acc_token}`;
+      config.headers.Authorization = `Bearer ${acc_token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
+// --------- Auth Services ---------
 const authServices = {
   login: async (logData) => {
-    const res = await api.post("/auth/login", logData);
-    return res.data;
+    try {
+      const res = await api.post("/auth/login", logData);
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
   },
   registration: async (registerData) => {
-    const res = await api.post("/auth/registration", registerData);
-    return res.data;
+    try {
+      const res = await api.post("/auth/registration", registerData);
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
   },
   getProfile: async () => {
-    const res = await api.get("/auth/getProfile");
-    return res.data;
+    try {
+      const res = await api.get("/auth/getProfile");
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
   },
 };
 
+// --------- URL Shortener Services ---------
 const urlServices = {
   createShort: async (urlLong) => {
-    const res = await api.post("/shorturl/create", { urlLong });
-    return res.data;
+    try {
+      const res = await api.post("/shorturl/create", { urlLong });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
   },
   getAll: async () => {
-    const res = await api.get("/shorturl/getall");
-    return res.data;
+    try {
+      const res = await api.get("/shorturl/getall");
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
   },
-  deleteShort: async () => {
-    const res = await api.delete("/shorturl/delete/:id");
-    return res.data;
+  deleteShort: async (id) => {
+    try {
+      const res = await api.delete(`/shorturl/delete/${id}`);
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
   },
 };
 

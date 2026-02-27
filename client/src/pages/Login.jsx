@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link2 } from "lucide-react";
-import { Link } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { authServices } from "../api";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
@@ -19,12 +19,18 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
-      if (result && !result.success) {
-        setError(result.error || "Login failed. Please try again.");
-      }
+      await authServices.login({
+        email: formData.email,
+        password: formData.password,
+      });
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "An unexpected error occurred");
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
+        "Login failed. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link2 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { authServices } from "../api";
 
 const Registration = () => {
   const [formData, setFormData] = useState({
@@ -12,15 +12,7 @@ const Registration = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
 
   // Clear error when user starts typing
   const handleInputChange = (field, value) => {
@@ -58,32 +50,20 @@ const Registration = () => {
     setLoading(true);
 
     try {
-      const result = await register({
+      await authServices.registration({
         userName: formData.userName,
         email: formData.email,
         password: formData.password,
       });
-      
-      console.log("Registration result:", result);
-      
-      if (result && result.success) {
-        if (result.needsLogin) {
-          // No token returned - user needs to login
-          setError("Registration successful! Please login to continue.");
-          setTimeout(() => {
-            navigate("/login");
-          }, 2000);
-        } else {
-          // Token received - navigate to dashboard
-          console.log("Registration successful! Redirecting to dashboard...");
-          navigate("/dashboard");
-        }
-      } else if (result && !result.success) {
-        setError(result.error || "Registration failed. Please try again.");
-      }
+
+      navigate("/login");
     } catch (err) {
-      console.error("Registration exception:", err);
-      setError(err.message || "An unexpected error occurred");
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
+        "Registration failed. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,6 @@
 import React from "react";
 import Error from "./pages/Error";
-import { AuthProvider } from "./context/AuthContext";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import Layout from "./components/layout";
@@ -11,7 +10,6 @@ const App = () => {
   return (
     <>
       <BrowserRouter>
-        <AuthProvider>
           <Routes>
             <Route path="/registration" element={<Registration />} />
             <Route path="/login" element={<Login />} />
@@ -21,7 +19,6 @@ const App = () => {
             </Route>
             <Route path="*" element={<Error />} />
           </Routes>
-        </AuthProvider>
       </BrowserRouter>
     </>
   );

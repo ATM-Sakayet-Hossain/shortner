@@ -1,15 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link2, LogOut, Menu, X } from "lucide-react";
-import { Link } from "react-router";
-import { useAuth } from "../../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { authServices } from "../../api";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    setMobileMenuOpen(false);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await authServices.getProfile();
+        setUser(profile);
+        setIsAuthenticated(true);
+      } catch {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      // Optional: if backend adds a /auth/logout, call it here
+      // await authServices.logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      document.cookie =
+        "acc_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      setUser(null);
+      setIsAuthenticated(false);
+      setMobileMenuOpen(false);
+      navigate("/");
+    }
   };
 
   return (
@@ -28,7 +56,7 @@ const Navbar = () => {
             {isAuthenticated && user ? (
               <>
                 <Link
-                  to="/dashboard"
+                  to="/Dashboard"
                   className="px-4 py-2 hover:bg-white/20 rounded-lg transition"
                 >
                   Dashboard
@@ -77,7 +105,7 @@ const Navbar = () => {
             {isAuthenticated && user ? (
               <div className="space-y-2">
                 <Link
-                  to="/dashboard"
+                  to="/Dashboard"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-4 py-2 hover:bg-white/20 rounded-lg transition"
                 >

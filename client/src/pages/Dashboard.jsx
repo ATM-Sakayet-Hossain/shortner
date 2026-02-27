@@ -1,41 +1,44 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router";
-import {
-  useGetShortUrlsQuery,
-  useCreateShortUrlMutation,
-  useDeleteShortUrlMutation,
-} from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import { authServices, urlServices } from "../api";
 
 const Dashboard = () => {
   const [urlInput, setUrlInput] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [formError, setFormError] = useState("");
-  const { isAuthenticated } = useAuth();
+  const [data, setData] = useState([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  const {
-    data,
-    isLoading: isInitialLoading,
-    isFetching,
-    isError,
-    error,
-  } = useGetShortUrlsQuery(undefined, {
-    skip: !isAuthenticated,
-  });
-
-  const [createShortUrl, { isLoading: isCreating }] =
-    useCreateShortUrlMutation();
-  const [deleteShortUrl, { isLoading: isDeleting }] =
-    useDeleteShortUrlMutation();
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthenticated && !isInitialLoading && !isFetching) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, isInitialLoading, isFetching, navigate]);
+    const fetchData = async () => {
+      setIsInitialLoading(true);
+      setIsError(false);
+      setError(null);
+
+      try {
+        await authServices.getProfile();
+        const urls = await urlServices.getAll();
+        setData(Array.isArray(urls) ? urls : urls?.data || []);
+      } catch (err) {
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
+          navigate("/");
+          return;
+        }
+        setIsError(true);
+        setError(err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
 
   const userUrls = useMemo(() => {
     if (!data || !Array.isArray(data)) return [];
@@ -56,16 +59,27 @@ const Dashboard = () => {
 
     setFormError("");
 
+    setIsCreating(true);
+    setIsError(false);
+    setError(null);
+
     try {
-      await createShortUrl(urlInput.trim()).unwrap();
+      await urlServices.createShort(urlInput.trim());
+
+      const urls = await urlServices.getAll();
+      setData(Array.isArray(urls) ? urls : urls?.data || []);
       setUrlInput("");
-      // List will auto-refresh via invalidatesTags
     } catch (err) {
       const message =
-        err?.data?.message ||
-        err?.error ||
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
         "Failed to create short URL. Please try again.";
       setFormError(message);
+      setIsError(true);
+      setError(err);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -87,16 +101,18 @@ const Dashboard = () => {
     }
 
     try {
-      await deleteShortUrl(id).unwrap();
-      // Cache invalidation will refresh list
+      await urlServices.deleteShort(id);
+
+      const urls = await urlServices.getAll();
+      setData(Array.isArray(urls) ? urls : urls?.data || []);
     } catch (err) {
       console.error("Delete error:", err);
     }
   };
 
-  if (isInitialLoading && isAuthenticated) {
+  if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[93vh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your URLs...</p>
@@ -106,7 +122,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[93vh] bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -213,14 +229,14 @@ const Dashboard = () => {
                   <div className="flex items-start justify-between flex-col sm:flex-row gap-4">
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <a
-                          href={`https://shortner-azure.vercel.app/${url.shortCode}`}
+                        <Link
+                          to={`https://shortner-azure.vercel.app/${url.shortCode}`}
                           className="text-lg font-semibold text-blue-600 hover:text-blue-700"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           https://shortner-azure.vercel.app/{url.shortCode}
-                        </a>
+                        </Link>
                         <button
                           onClick={() => handleCopy(url.shortCode, url.id)}
                           className="text-gray-400 hover:text-gray-600 transition"
@@ -244,15 +260,15 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <a
-                        href={url.originalUrl}
+                      <Link
+                        to={url.originalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-gray-400 hover:text-blue-600 transition"
                         title="Visit original URL"
                       >
                         <ExternalLink className="w-5 h-5" />
-                      </a>
+                      </Link>
                       <button
                         onClick={() => handleDelete(url.id)}
                         className="p-2 text-gray-400 hover:text-red-600 transition"

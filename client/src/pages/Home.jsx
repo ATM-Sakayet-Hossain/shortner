@@ -1,21 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router";
-import { useCreateShortUrlMutation } from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import { authServices, urlServices } from "../api";
 
 const Home = () => {
   const [urlInput, setUrlInput] = useState("");
   const [guestUrls, setGuestUrls] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
   const [error, setError] = useState("");
-  const { user } = useAuth();
+  const [isCreating, setIsCreating] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const [createShortUrl, { isLoading: isCreating }] =
-    useCreateShortUrlMutation();
 
   // Load guest URLs from localStorage on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const savedUrls = localStorage.getItem("guestUrls");
     if (savedUrls) {
       try {
@@ -27,13 +25,26 @@ const Home = () => {
   }, []);
 
   // Save guest URLs to localStorage whenever they change
-  React.useEffect(() => {
+  useEffect(() => {
     if (guestUrls.length > 0) {
       localStorage.setItem("guestUrls", JSON.stringify(guestUrls));
     } else {
       localStorage.removeItem("guestUrls");
     }
   }, [guestUrls]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await authServices.getProfile();
+        setUser(profile);
+      } catch {
+        setUser(null);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleCreateUrl = async () => {
     if (!urlInput.trim()) {
@@ -48,9 +59,10 @@ const Home = () => {
     }
 
     setError("");
+    setIsCreating(true);
 
     try {
-      const data = await createShortUrl(urlInput.trim()).unwrap();
+      const data = await urlServices.createShort(urlInput.trim());
       if (data) {
         const shortCode = data.urlShort || data.shortUrl || data.shortCode;
         const originalUrl = data.urlLong || data.longUrl || urlInput.trim();
@@ -71,11 +83,13 @@ const Home = () => {
       }
     } catch (err) {
       const message =
-        err?.data?.message ||
-        err?.error ||
+        err?.response?.data?.message ||
+        err?.response?.data ||
         err.message ||
         "Failed to create short URL. Please try again.";
       setError(message);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -98,7 +112,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[93vh] bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
@@ -169,14 +183,14 @@ const Home = () => {
                   <div className="flex items-start justify-between flex-col sm:flex-row gap-4">
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <a
-                          href={`https://shortner-azure.vercel.app/${url.shortCode}`}
+                        <Link
+                          to={`https://shortner-azure.vercel.app/${url.shortCode}`}
                           className="text-lg font-semibold text-blue-600 hover:text-blue-700"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          localhost:1993/{url.shortCode}
-                        </a>
+                          https://shortner-azure.vercel.app/{url.shortCode}
+                        </Link>
                         <button
                           onClick={() => handleCopy(url.shortCode, url.id)}
                           className="text-gray-400 hover:text-gray-600 transition"
@@ -200,15 +214,15 @@ const Home = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <a
-                        href={url.originalUrl}
+                      <Link
+                        to={url.originalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-gray-400 hover:text-blue-600 transition"
                         title="Visit original URL"
                       >
                         <ExternalLink className="w-5 h-5" />
-                      </a>
+                      </Link>
                       <button
                         onClick={() => handleDelete(url.id)}
                         className="p-2 text-gray-400 hover:text-red-600 transition"
