@@ -5,67 +5,36 @@ import { authServices } from "../api";
 
 const Registration = () => {
   const [formData, setFormData] = useState({
+    userName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userName: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Clear error when user starts typing
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
     if (error) {
       setError("");
     }
   };
-
-  const handleRegister = async () => {
-    setError("");
-
-    if (!formData.userName || formData.userName.trim() === "") {
-      setError("Username is required");
-      return;
-    }
-    if (!formData.email || formData.email.trim() === "") {
-      setError("Email is required");
-      return;
-    }
-    if (!formData.password || formData.password.trim() === "") {
-      setError("Password is required");
-      return;
-    }
-    if (!formData.confirmPassword || formData.confirmPassword.trim() === "") {
-      setError("Confirm Password is required");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
+  const handleRegister = async (e) => {
+    e.preventDefault();
     setLoading(true);
-
+    
     try {
-      await authServices.registration({
-        userName: formData.userName,
-        email: formData.email,
-        password: formData.password,
-      });
-
-      navigate("/login");
-    } catch (err) {
+      const res = await authServices.registration(formData);
+      console.log(res);
+    } catch (error) {
       const message =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        err?.message ||
-        "Registration failed. Please try again.";
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong";
       setError(message);
-    } finally {
-      setLoading(false);
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -87,7 +56,7 @@ const Registration = () => {
             </div>
           )}
 
-          <div className="space-y-6">
+          <form onSubmit={handleRegister} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Username
@@ -96,7 +65,6 @@ const Registration = () => {
                 type="text"
                 value={formData.userName}
                 onChange={(e) => handleInputChange("userName", e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="johndoe"
                 disabled={loading}
@@ -111,7 +79,6 @@ const Registration = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="your@email.com"
                 disabled={loading}
@@ -126,7 +93,6 @@ const Registration = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 disabled={loading}
@@ -147,7 +113,6 @@ const Registration = () => {
                 onChange={(e) =>
                   handleInputChange("confirmPassword", e.target.value)
                 }
-                onKeyPress={(e) => e.key === "Enter" && handleRegister()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 disabled={loading}
@@ -155,13 +120,12 @@ const Registration = () => {
             </div>
 
             <button
-              onClick={handleRegister}
               disabled={loading}
               className="w-full bg-linear-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </button>
-          </div>
+          </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">

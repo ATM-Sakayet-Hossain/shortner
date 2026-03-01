@@ -1,97 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { authServices, urlServices } from "../api";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const [urlInput, setUrlInput] = useState("");
-  const [guestUrls, setGuestUrls] = useState([]);
+  const [guestUrls, setGuestUrls] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [error, setError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
 
-  // Load guest URLs from localStorage on mount
-  useEffect(() => {
-    const savedUrls = localStorage.getItem("guestUrls");
-    if (savedUrls) {
-      try {
-        setGuestUrls(JSON.parse(savedUrls));
-      } catch (e) {
-        console.error("Error loading guest URLs:", e);
-      }
-    }
-  }, []);
-
-  // Save guest URLs to localStorage whenever they change
-  useEffect(() => {
-    if (guestUrls.length > 0) {
-      localStorage.setItem("guestUrls", JSON.stringify(guestUrls));
-    } else {
-      localStorage.removeItem("guestUrls");
-    }
-  }, [guestUrls]);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const profile = await authServices.getProfile();
-        setUser(profile);
-      } catch {
-        setUser(null);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const handleCreateUrl = async () => {
-    if (!urlInput.trim()) {
-      setError("Please enter a URL");
-      return;
-    }
-
-    // If user is authenticated, redirect to dashboard
-    if (user) {
-      navigate("/dashboard");
-      return;
-    }
-
-    setError("");
-    setIsCreating(true);
-
-    try {
-      const data = await urlServices.createShort(urlInput.trim());
-      if (data) {
-        const shortCode = data.urlShort || data.shortUrl || data.shortCode;
-        const originalUrl = data.urlLong || data.longUrl || urlInput.trim();
-
-        if (!shortCode) {
-          throw new Error("Failed to create short URL. Please try again.");
-        }
-
-        const newUrl = {
-          id: Date.now().toString(),
-          shortCode,
-          originalUrl,
-          clicks: 0,
-          createdAt: new Date().toLocaleDateString(),
-        };
-        setGuestUrls([newUrl, ...guestUrls]);
-        setUrlInput("");
-      }
-    } catch (err) {
-      const message =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        err.message ||
-        "Failed to create short URL. Please try again.";
-      setError(message);
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   const handleCopy = async (shortCode, id) => {
     const fullUrl = `https://shortner-server.vercel.app/${shortCode}`;
@@ -105,7 +23,6 @@ const Home = () => {
   };
 
   const handleDelete = (id) => {
-    // Confirm deletion
     if (window.confirm("Are you sure you want to delete this URL?")) {
       setGuestUrls(guestUrls.filter((url) => url.id !== id));
     }
@@ -133,110 +50,8 @@ const Home = () => {
             </p>
           </div>
         </div>
-
         {/* URL Shortener */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 max-w-4xl mx-auto">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
-            Create Short URL
-          </h3>
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="url"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleCreateUrl()}
-              placeholder="Paste your long URL here..."
-              className="flex-1 px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-lg"
-              disabled={isCreating}
-            />
-            <button
-              onClick={handleCreateUrl}
-              disabled={isCreating}
-              className="bg-linear-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCreating ? "Shortening..." : "Shorten URL"}
-            </button>
-          </div>
-        </div>
-
-        {/* Recent URLs */}
-        {guestUrls.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-4xl mx-auto">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <h3 className="text-xl font-bold text-gray-800">
-                Your Shortened URLs
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {!user &&
-                  "These links are saved in your browser. Sign up to save them permanently!"}
-              </p>
-            </div>
-
-            <div className="divide-y divide-gray-200">
-              {guestUrls.map((url) => (
-                <div key={url.id} className="p-6 hover:bg-gray-50 transition">
-                  <div className="flex items-start justify-between flex-col sm:flex-row gap-4">
-                    <div className="flex-1 min-w-0 w-full">
-                      <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <Link
-                          to={`https://shortner-server.vercel.app/${url.shortCode}`}
-                          className="text-lg font-semibold text-blue-600 hover:text-blue-700"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          https://shortner-server.vercel.app/{url.shortCode}
-                        </Link>
-                        <button
-                          onClick={() => handleCopy(url.shortCode, url.id)}
-                          className="text-gray-400 hover:text-gray-600 transition"
-                          title="Copy to clipboard"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        {copiedId === url.id && (
-                          <span className="text-sm text-green-600 font-medium">
-                            Copied!
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-600 text-sm break-all mb-2">
-                        {url.originalUrl}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>{url.clicks} clicks</span>
-                        <span>•</span>
-                        <span>Created {url.createdAt}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Link
-                        to={url.originalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 text-gray-400 hover:text-blue-600 transition"
-                        title="Visit original URL"
-                      >
-                        <ExternalLink className="w-5 h-5" />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(url.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition"
-                        title="Delete URL"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        
 
         {/* Features Section */}
         {guestUrls.length === 0 && (
