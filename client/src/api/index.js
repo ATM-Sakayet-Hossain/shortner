@@ -14,7 +14,7 @@ api.interceptors.request.use(
   (config) => {
     const acc_token = getCookie("acc_token");
     if (acc_token) {
-      config.headers.Authorization = `${acc_token}`;
+      config.headers.Authorization = `Bearer ${acc_token}`;
     }
     return config;
   },

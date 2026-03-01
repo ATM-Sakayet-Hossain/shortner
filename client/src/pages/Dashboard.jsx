@@ -14,8 +14,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Redirect if not authenticated
-  useEffect(() => {
+   useEffect(() => {
     const fetchData = async () => {
       setIsInitialLoading(true);
       setIsError(false);
@@ -196,7 +195,6 @@ const Dashboard = () => {
               type="url"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleCreateUrl()}
               placeholder="Enter your long URL here..."
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
               disabled={isCreating}

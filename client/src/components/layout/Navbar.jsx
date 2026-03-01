@@ -7,7 +7,6 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,8 +16,9 @@ const Navbar = () => {
         setUser(profile);
         setIsAuthenticated(true);
       } catch (error) {
-        const message = error?.response?.data?.message || error?.message;
-        setError(message);
+        if (error?.response?.status && error.response.status !== 401) {
+          console.error("Navbar getProfile error:", error);
+        }
         setUser(null);
         setIsAuthenticated(false);
       }
