@@ -9,13 +9,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    if (!formData.email || !formData.password) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    setError("");
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
@@ -24,12 +19,11 @@ const Login = () => {
         password: formData.password,
       });
       navigate("/dashboard");
-    } catch (err) {
+    } catch (error) {
       const message =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        err?.message ||
-        "Login failed. Please try again.";
+        error?.response?.data?.message ||
+        error?.response?.data ||
+        error?.message;
       setError(message);
     } finally {
       setLoading(false);
@@ -54,7 +48,7 @@ const Login = () => {
             </div>
           )}
 
-          <div className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email
@@ -65,7 +59,6 @@ const Login = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 placeholder="your@email.com"
                 disabled={loading}
@@ -82,20 +75,18 @@ const Login = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 disabled={loading}
               />
             </div>
             <button
-              onClick={handleLogin}
               disabled={loading}
               className="w-full bg-linear-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Logging in..." : "Login"}
             </button>
-          </div>
+          </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">

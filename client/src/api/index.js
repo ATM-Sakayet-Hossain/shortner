@@ -18,16 +18,17 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 const authServices = {
-  login: async (logData) => {
-    const res = await api.post("/auth/login", logData);
-    return res.data;
-  },
   registration: async (registerData) => {
     const res = await api.post("/auth/registration", registerData);
+    return res.data;
+  },
+  login: async (logData) => {
+    const res = await api.post("/auth/login", logData);
+    console.log(res);
     return res.data;
   },
   getProfile: async () => {
@@ -46,9 +47,9 @@ const urlServices = {
     return res.data;
   },
   deleteUrl: async (id) => {
-  const res = await api.delete(`/shorturl/delete/${id}`);
-  return res.data;
-},
+    const res = await api.delete(`/shorturl/delete/${id}`);
+    return res.data;
+  },
 };
 
 export { authServices, urlServices };

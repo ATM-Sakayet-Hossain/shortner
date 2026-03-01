@@ -1,11 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { Link2, LogOut, Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authServices } from "../../api";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getProfile = async () => {
+      try {
+        const profile = await authServices.getProfile();
+        setUser(profile);
+        setIsAuthenticated(true);
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message;
+        setError(message);
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+    getProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      // Optional: if backend adds a /auth/logout, call it here
+      // await authServices.logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      document.cookie =
+        "acc_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      setUser(null);
+      setIsAuthenticated(false);
+      setMobileMenuOpen(false);
+      navigate("/");
+    }
+  };
 
   return (
     <nav className="bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-lg">
@@ -28,8 +63,11 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <span className="text-sm">Welcome, Sakayet</span>
-                <button className="flex items-center space-x-1 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition">
+                <span className="text-sm">Welcome, {user.userName}</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition"
+                >
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
                 </button>
@@ -75,8 +113,13 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <div className="px-4 py-2 text-sm">Welcome, sakayet</div>
-                <button className="w-full text-left px-4 py-2 hover:bg-white/20 rounded-lg transition">
+                <div className="px-4 py-2 text-sm">
+                  Welcome, {user.userName}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-white/20 rounded-lg transition"
+                >
                   Logout
                 </button>
               </div>

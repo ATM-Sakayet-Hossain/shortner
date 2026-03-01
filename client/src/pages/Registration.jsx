@@ -17,21 +17,22 @@ const Registration = () => {
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
     if (error) {
-      setError("");
+      const message =
+        error?.response?.data?.message ||
+        error?.message;
+      setError(message);
     }
   };
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
     try {
-      const res = await authServices.registration(formData);
-      console.log(res);
+      await authServices.registration(formData);
+      navigate("/login");
     } catch (error) {
       const message =
         error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong";
+        error?.message;
       setError(message);
     }finally{
       setLoading(false)
