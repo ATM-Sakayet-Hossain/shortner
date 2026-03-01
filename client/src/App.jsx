@@ -2,7 +2,7 @@ import React from "react";
 import Error from "./pages/Error";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
-import Layout from "./components/layout";
+import Layout from "./components/layout/Index.jsx";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
