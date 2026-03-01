@@ -53,7 +53,7 @@ const getShortUrls = async (req, res) => {
     const urlHistory = await shortUrlSchema.find({user: user.id}).select("-user");
     res.status(200).send(urlHistory)
   } catch (error) {
-    console.log(error);
+    res.status(500).send({ message: "Server Error" });
   }
 }
 
@@ -85,7 +85,6 @@ const deleteShortUrl = async (req, res) => {
     res.status(200).send({ message: "URL deleted successfully" });
   } catch (error) {
     res.status(500).send({ message: "Server Error" });
-    console.log('Delete error:', error);
   }
 }
 

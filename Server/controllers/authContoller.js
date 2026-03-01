@@ -18,19 +18,12 @@ const registration = async (req, res) => {
           "Username must be 3-16 characters long and can only contain letters, numbers, and underscores.",
       });
     }
-    const existingUserName = await userSchema.findOne({ userName });
-    if (existingUserName)
-      return res.status(400).send({ message: "User Name already exists" });
-
     if (!email) {
       return res.status(400).send({ message: "Email are required" });
     }
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
-    const existingUser = await userSchema.findOne({ email, userName });
-    if (existingUser)
-      return res.status(400).send({ message: "Email already exists" });
     if (!password) {
       return res.status(400).send({ message: "Password are required" });
     }
@@ -40,6 +33,9 @@ const registration = async (req, res) => {
           "Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
       });
     }
+    const existingUser = await userSchema.findOne({ email });
+    if (existingUser)
+      return res.status(400).send({ message: "Email already exists" });
     const userData = new userSchema({
       userName,
       email,
@@ -48,9 +44,6 @@ const registration = async (req, res) => {
     userData.save();
     res.status(201).json({ message: "User registation successful" });
   } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).send({ message: "Duplicate User Name" });
-    }
     res.status(500).send({ message: "Server error" });
   }
 };
@@ -80,10 +73,8 @@ const login = async (req, res) => {
     if (!match) return res.status(401).send({ message: "Unauthorized user" });
     const token = generateAccTkn({ id: userData._id, email: userData.email });
     res.cookie("acc_token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
+      httpOnly: false,
+      secure: false,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).json({ message: "User login successful" });
@@ -100,7 +91,6 @@ const getProfile = async (req, res) => {
     res.status(200).send(userData);
   } catch (error) {
     res.status(500).send({ message: "internal Server Error" });
-    console.log(error);
   }
 };
 
