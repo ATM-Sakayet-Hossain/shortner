@@ -17,7 +17,7 @@ const shortUrlSchema = new mongoose.Schema({
     {
       visitTime: {
         type: Date,
-        default: Date.now(),
+        default: Date.now,
       },
     },
   ],
