@@ -73,11 +73,11 @@ const login = async (req, res) => {
     if (!match) return res.status(401).send({ message: "Unauthorized user" });
     const token = generateAccTkn({ id: userData._id, email: userData.email });
     res.cookie("acc_token", token, {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.status(200).json({ message: "User login successful" });
+    res.status(200).send({ message: "User login successful" });
   } catch (error) {
     res.status(500).send({ message: "Server error" });
   }
