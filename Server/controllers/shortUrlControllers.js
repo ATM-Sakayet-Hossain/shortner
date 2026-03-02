@@ -23,7 +23,7 @@ const createShortUrl = async (req, res) => {
       user: req.user?.id,
     });
 
-    urlData.save();
+    await urlData.save();
     res.status(201).send({
       longUrl: urlData.urlLong,
       shortUrl: urlData.urlShort,
@@ -37,10 +37,10 @@ const redirecUrl = async (req, res) => {
     const params = req.params;
     if (!params.id) return;
     const urlData = await shortUrlSchema.findOne({ urlShort: params.id });
-    if (!urlData) res.redirect(process.env.CLIENT_URL + urlData.urlShort);
+    if (!urlData) return res.status(404).send({ message: "URL not found" });
     if (urlData.user){
       urlData.visitHistory.push({visitTime: Date.now()});
-      urlData.save()
+      await urlData.save();
     }
     res.redirect(urlData.urlLong);
   } catch (error) {

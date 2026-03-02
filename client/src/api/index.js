@@ -46,7 +46,7 @@ const urlServices = {
     const res = await api.get("/shorturl/getall");
     return res.data;
   },
-  deleteUrl: async (id) => {
+  deleteShort: async (id) => {
     const res = await api.delete(`/shorturl/delete/${id}`);
     return res.data;
   },
