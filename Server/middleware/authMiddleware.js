@@ -2,7 +2,7 @@ const { virifyToken } = require("../utils/token");
 
 const IsAuthMiddleware = (req, res, next) => {
   try {
-    const token = req.cookies.acc_token;
+    const token = req.cookies?.acc_token;
     const decoded = virifyToken(token);
     req.user = decoded
     next();
@@ -12,7 +12,7 @@ const IsAuthMiddleware = (req, res, next) => {
 };
 const authMiddleware = (req, res, next) => {
   try {
-    const token = req.cookies.acc_token;
+    const token = req.cookies?.acc_token;
     const decoded = virifyToken(token);
     if(!decoded) return res.status(401).send({message: "Unauthorized Request"})
     req.user = decoded
