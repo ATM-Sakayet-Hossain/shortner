@@ -12,6 +12,7 @@ const registration = async (req, res) => {
     if (!userName) {
       return res.status(400).send({ message: "Name are required" });
     }
+    
     if (!isValidUsername(userName)) {
       return res.status(400).json({
         message:
