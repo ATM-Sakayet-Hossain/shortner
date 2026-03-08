@@ -12,6 +12,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    config.withCredentials = true;
     const acc_token = getCookie("acc_token");
     if (acc_token) {
       config.headers.Authorization = `Bearer ${acc_token}`;
@@ -28,11 +29,10 @@ const authServices = {
   },
   login: async (logData) => {
     const res = await api.post("/auth/login", logData);
-    console.log(res);
     return res.data;
   },
   getProfile: async () => {
-    const res = await api.get("/auth/getProfile");
+    const res = await api.get("/auth/getProfile", { withCredentials: true });
     return res.data;
   },
 };

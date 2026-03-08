@@ -23,7 +23,7 @@ const createShortUrl = async (req, res) => {
       user: req.user?.id,
     });
 
-    urlData.save();
+    await urlData.save();
     res.status(201).send({
       longUrl: urlData.urlLong,
       shortUrl: urlData.urlShort,
@@ -35,13 +35,18 @@ const createShortUrl = async (req, res) => {
 const redirecUrl = async (req, res) => {
   try {
     const params = req.params;
-    if (!params.id) return;
+    if (!params.id) {
+      return res.status(400).send({ message: "URL id is required" });
+    }
     const urlData = await shortUrlSchema.findOne({ urlShort: params.id });
-    if (!urlData) res.redirect(process.env.CLIENT_URL + urlData.urlShort);
-    // if (!urlData) return res.status(404).send({ message: "URL not found" });
-    if (urlData.user){
-      urlData.visitHistory.push({visitTime: Date.now()});
-      urlData.save()
+    if (!urlData) {
+      const clientUrl = process.env.CLIENT_URL || "/";
+      return res.redirect(clientUrl);
+      // Alternatively: return res.status(404).send({ message: "URL not found" });
+    }
+    if (urlData.user) {
+      urlData.visitHistory.push({ visitTime: Date.now() });
+      await urlData.save();
     }
     res.redirect(urlData.urlLong);
   } catch (error) {

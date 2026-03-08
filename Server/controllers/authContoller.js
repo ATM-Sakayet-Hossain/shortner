@@ -73,10 +73,11 @@ const login = async (req, res) => {
     const match = await userData.comparePassword(password);
     if (!match) return res.status(401).send({ message: "Unauthorized user" });
     const token = generateAccTkn({ id: userData._id, email: userData.email });
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("acc_token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).send({ message: "User login successful" });

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authServices, urlServices } from "../api";
+import { getCookie } from "../components/utils/services";
 
 const Home = () => {
   const [urlInput, setUrlInput] = useState("");
@@ -24,7 +25,6 @@ const Home = () => {
     }
   }, []);
 
-  // Save guest URLs to localStorage whenever they change
   useEffect(() => {
     if (guestUrls.length > 0) {
       localStorage.setItem("guestUrls", JSON.stringify(guestUrls));
@@ -36,6 +36,11 @@ const Home = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        const token = getCookie("acc_token");
+        if (!token) {
+          setUser(null);
+          return;
+        }
         const profile = await authServices.getProfile();
         setUser(profile);
       } catch {

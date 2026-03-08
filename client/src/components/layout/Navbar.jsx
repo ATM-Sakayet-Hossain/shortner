@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link2, LogOut, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authServices } from "../../api";
+import { getCookie } from "../utils/services";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -12,13 +13,17 @@ const Navbar = () => {
   useEffect(() => {
     const getProfile = async () => {
       try {
+        const token = getCookie("acc_token");
+        if (!token) {
+          setUser(null);
+          setIsAuthenticated(false);
+          return;
+        }
         const profile = await authServices.getProfile();
         setUser(profile);
         setIsAuthenticated(true);
       } catch (error) {
-        if (error?.response?.status && error.response.status !== 401) {
-          console.error("Navbar getProfile error:", error);
-        }
+        // Ignore 401/403 as they just mean unauthenticated
         setUser(null);
         setIsAuthenticated(false);
       }

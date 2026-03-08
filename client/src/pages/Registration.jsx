@@ -17,16 +17,18 @@ const Registration = () => {
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
     if (error) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message;
-      setError(message);
+      setError("");
     }
   };
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return;
+      }
       await authServices.registration(formData);
       navigate("/login");
     } catch (error) {
