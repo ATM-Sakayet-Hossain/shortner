@@ -1,5 +1,4 @@
 import axios from "axios";
-import { getCookie } from "../components/utils/services";
 
 // Create Axios instance
 const api = axios.create({
@@ -13,10 +12,6 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     config.withCredentials = true;
-    const acc_token = getCookie("acc_token");
-    if (acc_token) {
-      config.headers.Authorization = `Bearer ${acc_token}`;
-    }
     return config;
   },
   (error) => Promise.reject(error),
@@ -51,6 +46,5 @@ const urlServices = {
     return res.data;
   },
 };
-
 
 export { authServices, urlServices };

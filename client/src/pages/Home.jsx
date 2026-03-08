@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authServices, urlServices } from "../api";
-import { getCookie } from "../components/utils/services";
 
 const Home = () => {
   const [urlInput, setUrlInput] = useState("");
@@ -36,11 +35,6 @@ const Home = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = getCookie("acc_token");
-        if (!token) {
-          setUser(null);
-          return;
-        }
         const profile = await authServices.getProfile();
         setUser(profile);
       } catch {
@@ -87,9 +81,7 @@ const Home = () => {
       }
     } catch (err) {
       const message =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        err.message;
+        err?.response?.data?.message || err?.response?.data || err.message;
       setError(message);
     } finally {
       setIsCreating(false);

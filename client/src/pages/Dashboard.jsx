@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link2, BarChart3, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authServices, urlServices } from "../api";
-import { getCookie } from "../components/utils/services";
 
 const Dashboard = () => {
   const [urlInput, setUrlInput] = useState("");
@@ -22,12 +21,6 @@ const Dashboard = () => {
       setError(null);
 
       try {
-        const token = getCookie("acc_token");
-        if (!token) {
-          navigate("/");
-          return;
-        }
-
         await authServices.getProfile();
         const urls = await urlServices.getAll();
         setData(Array.isArray(urls) ? urls : urls?.data || []);
