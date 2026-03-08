@@ -12,7 +12,7 @@ const registration = async (req, res) => {
     if (!userName) {
       return res.status(400).send({ message: "Name are required" });
     }
-    
+
     if (!isValidUsername(userName)) {
       return res.status(400).json({
         message:
@@ -76,6 +76,7 @@ const login = async (req, res) => {
     res.cookie("acc_token", token, {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).send({ message: "User login successful" });
