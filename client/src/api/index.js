@@ -2,8 +2,7 @@ import axios from "axios";
 
 // Create Axios instance
 const api = axios.create({
-  // baseURL: "https://shortner-server.vercel.app",
-  baseURL: "http://localhost:1993",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:1993",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

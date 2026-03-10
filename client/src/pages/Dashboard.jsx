@@ -86,7 +86,7 @@ const Dashboard = () => {
   };
 
   const handleCopy = async (shortCode, id) => {
-    const fullUrl = `https://shortner-server.vercel.app/${shortCode}`;
+    const fullUrl = `${import.meta.env.VITE_API_BASE_URL}/${shortCode}`;
     try {
       await navigator.clipboard.writeText(fullUrl);
       setCopiedId(id);
@@ -232,12 +232,12 @@ const Dashboard = () => {
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <Link
-                          to={`https://shortner-server.vercel.app/${url.shortCode}`}
+                          to={`${import.meta.env.VITE_API_BASE_URL}/${url.shortCode}`}
                           className="text-lg font-semibold text-blue-600 hover:text-blue-700"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          https://shortner-server.vercel.app/{url.shortCode}
+                          {import.meta.env.VITE_API_BASE_URL}/{url.shortCode}
                         </Link>
                         <button
                           onClick={() => handleCopy(url.shortCode, url.id)}
