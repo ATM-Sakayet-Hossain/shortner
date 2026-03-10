@@ -22,7 +22,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-
+app.set("trust proxy", 1); // proxy support (Vercel)
 app.use(route);
 
 app.listen(Port, () => {

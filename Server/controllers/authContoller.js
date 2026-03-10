@@ -77,12 +77,24 @@ const login = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).json({ message: "User login successful" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
+};
+const logout = (req, res) => {
+  res.cookie("acc_token", "", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+    expires: new Date(0),
+  });
+
+  res.status(200).json({ message: "Logout successful" });
 };
 const getProfile = async (req, res) => {
   try {
@@ -96,4 +108,4 @@ const getProfile = async (req, res) => {
   }
 };
 
-module.exports = { registration, login, getProfile };
+module.exports = { registration, login, logout, getProfile };

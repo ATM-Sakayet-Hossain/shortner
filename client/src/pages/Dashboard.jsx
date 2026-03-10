@@ -47,7 +47,9 @@ const Dashboard = () => {
       shortCode: url.urlShort,
       originalUrl: url.urlLong,
       clicks: url.visitHistory?.length || 0,
-      createdAt: new Date(url.createdAt).toLocaleDateString(),
+      createdAt: url.createdAt
+        ? new Date(url.createdAt).toLocaleDateString()
+        : "N/A",
     }));
   }, [data]);
 

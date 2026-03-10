@@ -25,15 +25,27 @@ const Navbar = () => {
     getProfile();
   }, []);
 
+  // const handleLogout = async () => {
+  //   try {
+  //     // Optional: if backend adds a /auth/logout, call it here
+  //     await authServices.logout();
+  //   } catch (err) {
+  //     console.error("Logout failed:", err);
+  //   } finally {
+  //     document.cookie =
+  //       "acc_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  //     setUser(null);
+  //     setIsAuthenticated(false);
+  //     setMobileMenuOpen(false);
+  //     navigate("/");
+  //   }
+  // };
   const handleLogout = async () => {
     try {
-      // Optional: if backend adds a /auth/logout, call it here
-      // await authServices.logout();
+      await authServices.logout(); // call backend to clear cookie
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
-      document.cookie =
-        "acc_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       setUser(null);
       setIsAuthenticated(false);
       setMobileMenuOpen(false);
