@@ -10,7 +10,7 @@ const registration = async (req, res) => {
   const { userName, email, password } = req.body;
   try {
     if (!userName) {
-      return res.status(400).send({ message: "Name are required" });
+      return res.status(400).json({ message: "Name are required" });
     }
 
     if (!isValidUsername(userName)) {
@@ -20,13 +20,13 @@ const registration = async (req, res) => {
       });
     }
     if (!email) {
-      return res.status(400).send({ message: "Email are required" });
+      return res.status(400).json({ message: "Email are required" });
     }
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
     if (!password) {
-      return res.status(400).send({ message: "Password are required" });
+      return res.status(400).json({ message: "Password are required" });
     }
     if (!isStrongPassword(password)) {
       return res.status(400).json({
@@ -36,7 +36,7 @@ const registration = async (req, res) => {
     }
     const existingUser = await userSchema.findOne({ email });
     if (existingUser)
-      return res.status(400).send({ message: "Email already exists" });
+      return res.status(400).json({ message: "Email already exists" });
     const userData = new userSchema({
       userName,
       email,
@@ -45,7 +45,7 @@ const registration = async (req, res) => {
     userData.save();
     res.status(201).json({ message: "User registation successful" });
   } catch (error) {
-    res.status(500).send({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -53,13 +53,13 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     if (!email) {
-      return res.status(400).send({ message: "Email are required" });
+      return res.status(400).json({ message: "Email are required" });
     }
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
     if (!password) {
-      return res.status(400).send({ message: "Password are required" });
+      return res.status(400).json({ message: "Password are required" });
     }
     if (!isStrongPassword(password)) {
       return res.status(400).json({
@@ -69,20 +69,19 @@ const login = async (req, res) => {
     }
     const userData = await userSchema.findOne({ email });
     if (!userData)
-      return res.status(400).send({ message: "User does not exist" });
+      return res.status(400).json({ message: "User does not exist" });
     const match = await userData.comparePassword(password);
-    if (!match) return res.status(401).send({ message: "Unauthorized user" });
+    if (!match) return res.status(401).json({ message: "Unauthorized user" });
     const token = generateAccTkn({ id: userData._id, email: userData.email });
-    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("acc_token", token, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.status(200).send({ message: "User login successful" });
+    res.status(200).json({ message: "User login successful" });
   } catch (error) {
-    res.status(500).send({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 const getProfile = async (req, res) => {
@@ -90,10 +89,10 @@ const getProfile = async (req, res) => {
     const user = req.user;
     const userData = await userSchema.findById(user.id);
     if (!userData)
-      return res.status(404).send({ message: "User Profile Not Found" });
-    res.status(200).send(userData);
+      return res.status(404).json({ message: "User Profile Not Found" });
+    res.status(200).json(userData);
   } catch (error) {
-    res.status(500).send({ message: "internal Server Error" });
+    res.status(500).json({ message: "internal Server Error" });
   }
 };
 

@@ -13,9 +13,9 @@ const generateRandomStr = (length = 5) => {
 const createShortUrl = async (req, res) => {
   try {
     const { urlLong } = req.body;
-    if (!urlLong) return res.status(400).send({ message: "Url is required" });
+    if (!urlLong) return res.status(400).json({ message: "Url is required" });
     if (!isValidUrl(urlLong))
-      return res.status(400).send({ message: "Invalid url" });
+      return res.status(400).json({ message: "Invalid url" });
     const urlShort = generateRandomStr();
     const urlData = new shortUrlSchema({
       urlLong,
@@ -24,25 +24,25 @@ const createShortUrl = async (req, res) => {
     });
 
     await urlData.save();
-    res.status(201).send({
+    res.status(201).json({
       longUrl: urlData.urlLong,
       shortUrl: urlData.urlShort,
     });
   } catch (error) {
-    res.status(500).send({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 const redirecUrl = async (req, res) => {
   try {
     const params = req.params;
     if (!params.id) {
-      return res.status(400).send({ message: "URL id is required" });
+      return res.status(400).json({ message: "URL id is required" });
     }
     const urlData = await shortUrlSchema.findOne({ urlShort: params.id });
     if (!urlData) {
       const clientUrl = process.env.CLIENT_URL || "/";
       return res.redirect(clientUrl);
-      // Alternatively: return res.status(404).send({ message: "URL not found" });
+      // Alternatively: return res.status(404).json({ message: "URL not found" });
     }
     if (urlData.user) {
       urlData.visitHistory.push({ visitTime: Date.now() });
@@ -50,16 +50,16 @@ const redirecUrl = async (req, res) => {
     }
     res.redirect(urlData.urlLong);
   } catch (error) {
-    res.status(500).send({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 const getShortUrls = async (req, res) => {
   try {
     const user = req.user;
     const urlHistory = await shortUrlSchema.find({user: user.id}).select("-user");
-    res.status(200).send(urlHistory)
+    res.status(200).json(urlHistory)
   } catch (error) {
-    res.status(500).send({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error" });
   }
 }
 
@@ -71,26 +71,26 @@ const deleteShortUrl = async (req, res) => {
     console.log('Delete request received:', { id, userId: user?.id });
     
     if (!id) {
-      return res.status(400).send({ message: "URL ID is required" });
+      return res.status(400).json({ message: "URL ID is required" });
     }
     
     if (!user || !user.id) {
-      return res.status(401).send({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
     
     // Find the URL and verify it belongs to the user
     const urlData = await shortUrlSchema.findOne({ _id: id, user: user.id });
     
     if (!urlData) {
-      return res.status(404).send({ message: "URL not found or unauthorized" });
+      return res.status(404).json({ message: "URL not found or unauthorized" });
     }
     
     // Delete the URL from database
     await shortUrlSchema.findByIdAndDelete(id);
     
-    res.status(200).send({ message: "URL deleted successfully" });
+    res.status(200).json({ message: "URL deleted successfully" });
   } catch (error) {
-    res.status(500).send({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error" });
   }
 }
 
