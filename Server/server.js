@@ -23,6 +23,7 @@ app.use(
   }),
 );
 app.set("trust proxy", 1); // proxy support (Vercel)
+app.options("*", cors());
 app.use(route);
 
 app.listen(Port, () => {
