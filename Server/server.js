@@ -18,7 +18,6 @@ app.use(
       "https://shortner-client.vercel.app"
     ],
     withCredentials: true,
-    credentials: "include",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
