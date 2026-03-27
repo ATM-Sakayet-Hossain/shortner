@@ -11,7 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    config.credentials = "include;
+    config.credentials = "include";
     return config;
   },
   (error) => Promise.reject(error),
