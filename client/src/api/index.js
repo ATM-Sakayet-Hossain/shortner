@@ -3,7 +3,7 @@ import axios from "axios";
 // Create Axios instance
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:1993",
-  withCredentials: true,
+  credentials: "include",
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,7 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    config.withCredentials = true;
+    config.credentials = "include;
     return config;
   },
   (error) => Promise.reject(error),
